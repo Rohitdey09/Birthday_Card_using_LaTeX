@@ -1,32 +1,44 @@
-from pylatex import Document, Center, LargeText, Figure, LineBreak
-from pylatex.utils import italic, bold
+from pylatex import Document, Center, LargeText, Figure, Command, VerticalSpace
+from pylatex.utils import italic, bold, NoEscape, escape_latex
+from pylatex.package import Package
 
 def generate_card(recipient, sender, image_path="cake.jpg"):
-    doc = Document(documentclass="article")
+    # Escape special LaTeX characters in user inputs
+    recipient_escaped = escape_latex(recipient)
+    sender_escaped = escape_latex(sender)
+
+    doc = Document(documentclass='article')
+    doc.packages.append(Package('geometry',options=['paperwidth=5in','paperheight=7in']))
+
+    doc.preamble.append(Command('pagestyle', 'empty'))
 
     with doc.create(Center()) as centered:
-        # Line 8: No change needed here
+        # Add "Happy Birthday" in large bold text
         centered.append(LargeText(bold("Happy Birthday")))
-        centered.append(LineBreak())
+        centered.append(VerticalSpace("0.5cm"))
+        centered.append(Command('par'))  # Start a new paragraph
 
+        # Add the image
         with doc.create(Figure(position='h!')) as cakeimage:
-            # Line 11: No change needed here
             cakeimage.add_image(image_path, width='200px')
 
-        centered.append(LineBreak())
+        centered.append(Command('par'))  # Start a new paragraph
+        centered.append(VerticalSpace("0.5cm"))
 
-        # **Line 12: Corrected**
-        centered.append(LargeText(["Dear ", bold(recipient), ","]))
-        centered.append(LineBreak())
+        # Add "Dear Recipient,"
+        centered.append(LargeText(["Dear ", bold(recipient_escaped), ","]))
+        centered.append(Command('par'))  # Start a new paragraph
+        centered.append(VerticalSpace("0.5cm"))
 
-        # Line 14: No change needed here
+        # Add the message
         centered.append("Wishing you a day filled with love and joy")
-        centered.append(LineBreak())
-        centered.append(LineBreak())
+        centered.append(Command('par'))  # Start a new paragraph
+        centered.append(VerticalSpace("0.5cm"))
 
-        # **Line 16: Corrected**
-        centered.append(italic(["From ", bold(sender)]))
-        centered.append(LineBreak())
+        # Add "From Sender" in italic
+        centered.append(NoEscape(r'\textit{From \textbf{' + sender_escaped + '}}'))
+        centered.append(Command('par'))  # Start a new paragraph
+        centered.append(VerticalSpace("0.5cm"))
 
     doc.generate_pdf("BirthdayCard", compiler="pdflatex", clean_tex=False)
 
